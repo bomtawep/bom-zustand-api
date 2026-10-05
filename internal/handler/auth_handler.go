@@ -6,8 +6,8 @@ import (
 	"errors"
 	"net/http"
 
-	"bom-tanstack-api/internal/auth"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/auth"
+	"bom-zustand-api/internal/model"
 
 	"github.com/labstack/echo/v5"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -45,6 +45,18 @@ type loginRequest struct {
 	Password string `json:"password" validate:"required"`
 }
 
+// Login godoc
+//
+//	@Summary		Log in
+//	@Description	Exchanges email/password credentials for an access and refresh token pair.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		loginRequest	true	"Credentials"
+//	@Success		200		{object}	handler.tokenResponse
+//	@Failure		400		{object}	handler.errorResponse
+//	@Failure		401		{object}	handler.errorResponse
+//	@Router			/auth/login [post]
 func (h *AuthHandler) Login(c *echo.Context) error {
 	var req loginRequest
 	if err := c.Bind(&req); err != nil {
@@ -58,13 +70,25 @@ func (h *AuthHandler) Login(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, map[string]string{"accessToken": access, "refreshToken": refresh})
+	return c.JSON(http.StatusOK, tokenResponse{AccessToken: access, RefreshToken: refresh})
 }
 
 type refreshRequest struct {
 	RefreshToken string `json:"refreshToken" validate:"required"`
 }
 
+// Refresh godoc
+//
+//	@Summary		Refresh tokens
+//	@Description	Exchanges a valid refresh token for a new access and refresh token pair.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		refreshRequest	true	"Refresh token"
+//	@Success		200		{object}	handler.tokenResponse
+//	@Failure		400		{object}	handler.errorResponse
+//	@Failure		401		{object}	handler.errorResponse
+//	@Router			/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *echo.Context) error {
 	var req refreshRequest
 	if err := c.Bind(&req); err != nil {
@@ -78,9 +102,19 @@ func (h *AuthHandler) Refresh(c *echo.Context) error {
 	if err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, map[string]string{"accessToken": access, "refreshToken": refresh})
+	return c.JSON(http.StatusOK, tokenResponse{AccessToken: access, RefreshToken: refresh})
 }
 
+// Logout godoc
+//
+//	@Summary		Log out
+//	@Description	Revokes the given refresh token.
+//	@Tags			auth
+//	@Accept			json
+//	@Param			body	body	refreshRequest	true	"Refresh token"
+//	@Success		204
+//	@Failure		400	{object}	handler.errorResponse
+//	@Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *echo.Context) error {
 	var req refreshRequest
 	if err := c.Bind(&req); err != nil {
@@ -95,6 +129,15 @@ func (h *AuthHandler) Logout(c *echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
+// LogoutAll godoc
+//
+//	@Summary		Log out of all sessions
+//	@Description	Revokes every refresh token issued to the authenticated user.
+//	@Tags			auth
+//	@Security		BearerAuth
+//	@Success		204
+//	@Failure		401	{object}	handler.errorResponse
+//	@Router			/auth/logout-all [post]
 func (h *AuthHandler) LogoutAll(c *echo.Context) error {
 	userID, err := contextUserID(c)
 	if err != nil {
@@ -110,6 +153,17 @@ type forgotPasswordRequest struct {
 	Email string `json:"email" validate:"required,email"`
 }
 
+// ForgotPassword godoc
+//
+//	@Summary		Request a password reset
+//	@Description	Sends a password reset link to the given email if an account exists for it. Always responds 200 to avoid leaking account existence.
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		forgotPasswordRequest	true	"Account email"
+//	@Success		200		{object}	handler.messageResponse
+//	@Failure		400		{object}	handler.errorResponse
+//	@Router			/auth/forgot-password [post]
 func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 	var req forgotPasswordRequest
 	if err := c.Bind(&req); err != nil {
@@ -121,7 +175,7 @@ func (h *AuthHandler) ForgotPassword(c *echo.Context) error {
 	if err := h.service.ForgotPassword(c.Request().Context(), req.Email); err != nil {
 		return err
 	}
-	return c.JSON(http.StatusOK, map[string]string{"message": "if that email exists, a reset link has been sent"})
+	return c.JSON(http.StatusOK, messageResponse{Message: "if that email exists, a reset link has been sent"})
 }
 
 type resetPasswordRequest struct {
@@ -129,6 +183,16 @@ type resetPasswordRequest struct {
 	NewPassword string `json:"newPassword" validate:"required,min=8"`
 }
 
+// ResetPassword godoc
+//
+//	@Summary		Reset password with a token
+//	@Description	Sets a new password using the token emailed by the forgot-password flow.
+//	@Tags			auth
+//	@Accept			json
+//	@Param			body	body	resetPasswordRequest	true	"Reset token and new password"
+//	@Success		204
+//	@Failure		400	{object}	handler.errorResponse
+//	@Router			/auth/reset-password [post]
 func (h *AuthHandler) ResetPassword(c *echo.Context) error {
 	var req resetPasswordRequest
 	if err := c.Bind(&req); err != nil {
@@ -148,6 +212,18 @@ type changePasswordRequest struct {
 	NewPassword string `json:"newPassword" validate:"required,min=8"`
 }
 
+// ChangePassword godoc
+//
+//	@Summary		Change password
+//	@Description	Changes the authenticated user's password given their current password.
+//	@Tags			auth
+//	@Accept			json
+//	@Security		BearerAuth
+//	@Param			body	body	changePasswordRequest	true	"Old and new password"
+//	@Success		204
+//	@Failure		400	{object}	handler.errorResponse
+//	@Failure		401	{object}	handler.errorResponse
+//	@Router			/auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *echo.Context) error {
 	userID, err := contextUserID(c)
 	if err != nil {
@@ -171,6 +247,16 @@ type meResponse struct {
 	Permissions []auth.Permission `json:"permissions"`
 }
 
+// Me godoc
+//
+//	@Summary		Get current user
+//	@Description	Returns the authenticated user along with their effective permissions.
+//	@Tags			auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	handler.meResponse
+//	@Failure		401	{object}	handler.errorResponse
+//	@Router			/auth/me [get]
 func (h *AuthHandler) Me(c *echo.Context) error {
 	userID, err := contextUserID(c)
 	if err != nil {

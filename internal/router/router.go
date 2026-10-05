@@ -2,12 +2,10 @@
 package router
 
 import (
-	"net/http"
-
-	"bom-tanstack-api/internal/auth"
-	"bom-tanstack-api/internal/handler"
-	"bom-tanstack-api/internal/httpvalidator"
-	appmiddleware "bom-tanstack-api/internal/middleware"
+	"bom-zustand-api/internal/auth"
+	"bom-zustand-api/internal/handler"
+	"bom-zustand-api/internal/httpvalidator"
+	appmiddleware "bom-zustand-api/internal/middleware"
 
 	"github.com/labstack/echo/v5"
 )
@@ -17,9 +15,8 @@ func New(jwtSecret string, authHandler *handler.AuthHandler, userHandler *handle
 	e.Validator = httpvalidator.New()
 	e.HTTPErrorHandler = appmiddleware.ErrorHandler
 
-	e.GET("/healthz", func(c *echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
-	})
+	e.GET("/healthz", handler.Healthz)
+	e.GET("/swagger/*", handler.SwaggerUI)
 
 	authGroup := e.Group("/api/v1/auth")
 	authGroup.POST("/login", authHandler.Login)

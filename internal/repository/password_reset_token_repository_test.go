@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"bom-tanstack-api/internal/apperr"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/apperr"
+	"bom-zustand-api/internal/model"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

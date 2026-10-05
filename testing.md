@@ -1,4 +1,4 @@
-# Testing Rules — bom-tanstack-api (Go + Echo + MongoDB)
+# Testing Rules — bom-zustand-api (Go + Echo + MongoDB)
 
 ## Scope & Tools
 - Test framework: standard `testing` package + `testify` (`assert` / `require`)

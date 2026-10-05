@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"bom-tanstack-api/internal/auth"
-	"bom-tanstack-api/internal/handler"
+	"bom-zustand-api/internal/auth"
+	"bom-zustand-api/internal/handler"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

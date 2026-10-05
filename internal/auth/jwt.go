@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"bom-tanstack-api/internal/apperr"
+	"bom-zustand-api/internal/apperr"
 
 	"github.com/golang-jwt/jwt/v5"
 )

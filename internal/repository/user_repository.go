@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"bom-tanstack-api/internal/apperr"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/apperr"
+	"bom-zustand-api/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"

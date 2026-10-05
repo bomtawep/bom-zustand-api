@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"bom-tanstack-api/internal/apperr"
-	"bom-tanstack-api/internal/auth"
+	"bom-zustand-api/internal/apperr"
+	"bom-zustand-api/internal/auth"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"

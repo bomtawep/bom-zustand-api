@@ -4,8 +4,8 @@ package middleware
 import (
 	"strings"
 
-	"bom-tanstack-api/internal/apperr"
-	"bom-tanstack-api/internal/auth"
+	"bom-zustand-api/internal/apperr"
+	"bom-zustand-api/internal/auth"
 
 	"github.com/labstack/echo/v5"
 )
