@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"bom-tanstack-api/internal/apperr"
-	"bom-tanstack-api/internal/httpvalidator"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/apperr"
+	"bom-zustand-api/internal/httpvalidator"
+	"bom-zustand-api/internal/model"
 
 	"github.com/labstack/echo/v5"
 	"github.com/stretchr/testify/assert"

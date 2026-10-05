@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"bom-tanstack-api/internal/auth"
-	"bom-tanstack-api/internal/mailer"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/auth"
+	"bom-zustand-api/internal/mailer"
+	"bom-zustand-api/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

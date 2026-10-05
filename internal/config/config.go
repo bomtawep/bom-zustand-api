@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -26,6 +28,10 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
+	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("config: loading .env: %w", err)
+	}
+
 	cfg := &Config{
 		Port:              getEnvDefault("PORT", "8080"),
 		MongoURI:          os.Getenv("MONGO_URI"),

@@ -6,16 +6,25 @@ import (
 	"log"
 	"time"
 
-	"bom-tanstack-api/internal/bootstrap"
-	"bom-tanstack-api/internal/config"
-	"bom-tanstack-api/internal/db"
-	"bom-tanstack-api/internal/handler"
-	"bom-tanstack-api/internal/mailer"
-	"bom-tanstack-api/internal/repository"
-	"bom-tanstack-api/internal/router"
-	"bom-tanstack-api/internal/service"
+	"bom-zustand-api/internal/bootstrap"
+	"bom-zustand-api/internal/config"
+	"bom-zustand-api/internal/db"
+	"bom-zustand-api/internal/handler"
+	"bom-zustand-api/internal/mailer"
+	"bom-zustand-api/internal/repository"
+	"bom-zustand-api/internal/router"
+	"bom-zustand-api/internal/service"
 )
 
+// @title			bom-zustand-api
+// @version		1.0
+// @description	HTTP API for bom-zustand-api, built on Echo.
+// @BasePath		/api/v1
+//
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description				Type "Bearer" followed by a space and the JWT access token.
 func main() {
 	cfg, err := config.Load()
 	if err != nil {

@@ -1,4 +1,4 @@
-# Security Rules — bom-tanstack-api (Go + Echo + MongoDB)
+# Security Rules — bom-zustand-api (Go + Echo + MongoDB)
 
 ## Input Handling
 - Every handler binds and validates input via `c.Bind()` + `c.Validate()` (struct tags via `go-playground/validator`) before it touches any service/repository code — never trust query params, path params, or body fields as-is

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"bom-tanstack-api/internal/apperr"
+	"bom-zustand-api/internal/apperr"
 
 	"github.com/labstack/echo/v5"
 )

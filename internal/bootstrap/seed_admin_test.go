@@ -5,8 +5,8 @@ import (
 	"context"
 	"testing"
 
-	"bom-tanstack-api/internal/auth"
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/auth"
+	"bom-zustand-api/internal/model"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

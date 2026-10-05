@@ -4,7 +4,7 @@ package router
 import (
 	"context"
 
-	"bom-tanstack-api/internal/model"
+	"bom-zustand-api/internal/model"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

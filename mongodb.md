@@ -1,4 +1,4 @@
-# MongoDB Rules — bom-tanstack-api (Go + Echo + MongoDB)
+# MongoDB Rules — bom-zustand-api (Go + Echo + MongoDB)
 
 ## Driver & Connection
 - Use the official driver `go.mongodb.org/mongo-driver/mongo` (check `go.mod` for v1 vs v2 — API differs, e.g. v2 drops `bson.M` in favor of explicit builders in some helpers)

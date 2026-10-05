@@ -2,12 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# Project: bom-tanstack-api — Go + Echo API
+# Project: bom-zustand-api — Go + Echo API
 
 ## Project status
 
 This repository is a fresh Go module scaffold with no application code yet. It currently contains only:
-- `go.mod` / `go.sum` — module `bom-tanstack-api`, Go 1.27.1, with `github.com/labstack/echo/v5` as a dependency (Echo is a Go web framework, so the API is expected to be built on it)
+- `go.mod` / `go.sum` — module `bom-zustand-api`, Go 1.27.1, with `github.com/labstack/echo/v5` as a dependency (Echo is a Go web framework, so the API is expected to be built on it)
 - `README.md` — title only
 - `.gitignore` — standard Go ignores
 
