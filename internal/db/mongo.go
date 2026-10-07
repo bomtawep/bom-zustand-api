@@ -55,5 +55,19 @@ func EnsureIndexes(ctx context.Context, database *mongo.Database) error {
 		return err
 	}
 
+	if _, err := database.Collection("templates").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "name", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}); err != nil {
+		return err
+	}
+
+	if _, err := database.Collection("report_definitions").Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "name", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }

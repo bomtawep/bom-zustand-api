@@ -85,3 +85,39 @@ func assertHasTokenHashIndex(ctx context.Context, t *testing.T, database *mongo.
 	}
 	assert.True(t, found, "expected an index on %s.token_hash", collection)
 }
+
+func TestEnsureIndexes_CreatesUniqueNameIndexes(t *testing.T) {
+	ctx := context.Background()
+
+	container, err := tcmongodb.Run(ctx, "mongo:7")
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	uri, err := container.ConnectionString(ctx)
+	require.NoError(t, err)
+
+	client, err := Connect(ctx, uri)
+	require.NoError(t, err)
+	defer client.Disconnect(ctx)
+
+	database := client.Database("testdb")
+	require.NoError(t, EnsureIndexes(ctx, database))
+
+	for _, collection := range []string{"templates", "report_definitions"} {
+		cursor, err := database.Collection(collection).Indexes().List(ctx)
+		require.NoError(t, err)
+		var indexes []map[string]interface{}
+		require.NoError(t, cursor.All(ctx, &indexes))
+
+		found := false
+		for _, idx := range indexes {
+			if key, ok := idx["key"].(map[string]interface{}); ok {
+				if _, hasName := key["name"]; hasName {
+					found = true
+					assert.Equal(t, true, idx["unique"])
+				}
+			}
+		}
+		assert.True(t, found, "expected a unique index on %s.name", collection)
+	}
+}
