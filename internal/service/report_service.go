@@ -151,7 +151,13 @@ func (s *ReportService) render(ctx context.Context, reportID primitive.ObjectID,
 	if err := reportquery.ValidateParams(def.ParamSchema, params); err != nil {
 		return "", fmt.Errorf("%w: %v", apperr.ErrInvalidReportParams, err)
 	}
-	pipeline, err := reportquery.BuildPipeline(def.PipelineTemplate, params)
+	// Drop any client-supplied key not declared in the report's ParamSchema
+	// before it reaches pipeline template execution — otherwise an
+	// undeclared key referenced by an authoring mistake in the pipeline
+	// template could let a caller who only holds report:generate permission
+	// inject arbitrary JSON structure into the aggregation pipeline.
+	filteredParams := reportquery.FilterDeclaredParams(def.ParamSchema, params)
+	pipeline, err := reportquery.BuildPipeline(def.PipelineTemplate, filteredParams)
 	if err != nil {
 		return "", fmt.Errorf("report %s has an invalid pipeline: %w", def.ID.Hex(), err)
 	}

@@ -27,6 +27,24 @@ func ValidateParams(schema []model.ReportParam, params map[string]interface{}) e
 	return nil
 }
 
+// FilterDeclaredParams returns a new map containing only the entries of
+// params whose key is declared in schema — used to ensure a param a client
+// supplies but the report definition doesn't declare can never reach
+// pipeline template execution.
+func FilterDeclaredParams(schema []model.ReportParam, params map[string]interface{}) map[string]interface{} {
+	declared := make(map[string]bool, len(schema))
+	for _, p := range schema {
+		declared[p.Name] = true
+	}
+	filtered := make(map[string]interface{}, len(params))
+	for k, v := range params {
+		if declared[k] {
+			filtered[k] = v
+		}
+	}
+	return filtered
+}
+
 func checkParamType(p model.ReportParam, v interface{}) error {
 	switch p.Type {
 	case "string":

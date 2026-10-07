@@ -244,3 +244,45 @@ func TestReportService_GenerateReportPDF_PropagatesRendererError(t *testing.T) {
 
 	require.Error(t, err)
 }
+
+func TestReportService_PreviewReport_DropsUndeclaredParamBeforeBuildingPipeline(t *testing.T) {
+	tmpl := &model.Template{
+		ID:          primitive.NewObjectID(),
+		Name:        "orders-report",
+		HTMLContent: `<html><body>ok</body></html>`,
+	}
+	reports := newFakeReportRepo()
+	data := &fakeDataRunner{rows: []bson.M{}}
+	renderer := &fakeRenderer{pdfBytes: []byte("%PDF-fake")}
+	svc := newReportServiceWithRenderPath(reports, newFakeTemplateLookup(tmpl), data, renderer)
+	schema := []model.ReportParam{{Name: "status", Type: "string", Required: true}}
+	// The pipeline template references an undeclared param, "secret", via
+	// {{json .secret}}. It is NOT in paramSchema below, so a client should
+	// never be able to influence this position with their own value — it
+	// must always marshal whatever (zero-value/absent) the service passes
+	// through, never the attacker-supplied "injected" value.
+	def, err := svc.CreateReport(context.Background(), "orders-by-status", tmpl.ID, "orders",
+		`[{"$match": {"status": {{json .status}}, "extra": {{json .secret}}}}]`, schema)
+	require.NoError(t, err)
+
+	_, err = svc.PreviewReport(context.Background(), def.ID, map[string]interface{}{
+		"status": "paid",
+		"secret": "injected",
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, data.lastPipeline)
+	foundExtra := false
+	for _, stage := range data.lastPipeline {
+		stageMap, ok := stage.(bson.M)
+		require.True(t, ok)
+		match, ok := stageMap["$match"].(bson.M)
+		require.True(t, ok)
+		if extra, present := match["extra"]; present {
+			foundExtra = true
+			assert.NotEqual(t, "injected", extra, "undeclared param value must never reach the built pipeline")
+			assert.Nil(t, extra, "undeclared param should marshal as JSON null, since the client-supplied value must be dropped before BuildPipeline")
+		}
+	}
+	assert.True(t, foundExtra, "expected the $match stage to contain the 'extra' key templated from the undeclared param")
+}
