@@ -15,11 +15,11 @@ import (
 )
 
 type fakeTemplateRepo struct {
-	byID           map[primitive.ObjectID]*model.Template
-	lastUpdateID   primitive.ObjectID
-	lastUpdateDoc  bson.M
-	deletedID      primitive.ObjectID
-	createErr      error
+	byID          map[primitive.ObjectID]*model.Template
+	lastUpdateID  primitive.ObjectID
+	lastUpdateDoc bson.M
+	deletedID     primitive.ObjectID
+	createErr     error
 }
 
 func newFakeTemplateRepo() *fakeTemplateRepo {
