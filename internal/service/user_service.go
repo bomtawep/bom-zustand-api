@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"bom-zustand-api/internal/auth"
@@ -61,8 +62,12 @@ func (s *UserService) CreateUser(ctx context.Context, email, name, role string) 
 		return nil, err
 	}
 
+	// The welcome email is a best-effort notification, not part of the
+	// create-user contract: the account already exists once s.users.Create
+	// succeeds above, so a mail outage must not fail (and must not be
+	// retried as) user creation.
 	if err := issuePasswordResetToken(ctx, s.resetTokens, s.mailer, u.ID, u.Email, s.resetTTL, s.baseURL); err != nil {
-		return nil, err
+		log.Printf("user_service: created user %s but failed to send welcome email: %v", u.ID.Hex(), err)
 	}
 	return u, nil
 }
