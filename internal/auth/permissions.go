@@ -17,12 +17,27 @@ const (
 	PermUserRead   Permission = "user:read"
 	PermUserUpdate Permission = "user:update"
 	PermUserDelete Permission = "user:delete"
+
+	PermTemplateCreate Permission = "template:create"
+	PermTemplateRead   Permission = "template:read"
+	PermTemplateUpdate Permission = "template:update"
+	PermTemplateDelete Permission = "template:delete"
+
+	PermReportCreate   Permission = "report:create"
+	PermReportRead     Permission = "report:read"
+	PermReportUpdate   Permission = "report:update"
+	PermReportDelete   Permission = "report:delete"
+	PermReportGenerate Permission = "report:generate"
 )
 
 var rolePermissions = map[Role][]Permission{
-	RoleAdmin:   {PermUserCreate, PermUserRead, PermUserUpdate, PermUserDelete},
-	RoleManager: {PermUserRead},
-	RoleStaff:   {},
+	RoleAdmin: {
+		PermUserCreate, PermUserRead, PermUserUpdate, PermUserDelete,
+		PermTemplateCreate, PermTemplateRead, PermTemplateUpdate, PermTemplateDelete,
+		PermReportCreate, PermReportRead, PermReportUpdate, PermReportDelete, PermReportGenerate,
+	},
+	RoleManager: {PermUserRead, PermTemplateRead, PermReportRead, PermReportGenerate},
+	RoleStaff:   {PermReportRead, PermReportGenerate},
 	RoleViewer:  {},
 }
 
