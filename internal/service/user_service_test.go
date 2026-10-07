@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -49,6 +50,20 @@ func TestUserService_CreateUser_SendsResetEmailAndNoUsablePasswordIsReturned(t *
 	assert.Equal(t, "newstaff@example.com", m.to)
 	assert.NotEmpty(t, u.PasswordHash)
 	assert.False(t, auth.ComparePassword(u.PasswordHash, ""))
+}
+
+func TestUserService_CreateUser_SucceedsEvenIfWelcomeEmailFails(t *testing.T) {
+	users := newFakeUserRepo()
+	m := &fakeMailer{sendErr: errors.New("dial tcp [::1]:1025: connect: connection refused")}
+	svc := newTestUserService(users, newFakeResetTokenRepoFull(), m)
+
+	u, err := svc.CreateUser(context.Background(), "newstaff@example.com", "New Staff", "staff")
+
+	require.NoError(t, err)
+	assert.NotNil(t, u)
+	assert.Equal(t, "newstaff@example.com", u.Email)
+	_, stored := users.byEmail["newstaff@example.com"]
+	assert.True(t, stored, "user should still be persisted when the welcome email fails to send")
 }
 
 func TestUserService_CreateUser_DuplicateEmailFails(t *testing.T) {

@@ -23,11 +23,12 @@ func (f *fakeResetTokenRepo) Create(ctx context.Context, t *model.PasswordResetT
 
 type fakeMailer struct {
 	to, subject, body string
+	sendErr           error
 }
 
 func (f *fakeMailer) Send(ctx context.Context, to, subject, body string) error {
 	f.to, f.subject, f.body = to, subject, body
-	return nil
+	return f.sendErr
 }
 
 func TestIssuePasswordResetToken_StoresHashAndEmailsRawToken(t *testing.T) {
