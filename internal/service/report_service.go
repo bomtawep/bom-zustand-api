@@ -1,8 +1,10 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"time"
 
 	"bom-zustand-api/internal/apperr"
@@ -139,4 +141,58 @@ func (s *ReportService) UpdateReport(ctx context.Context, id primitive.ObjectID,
 
 func (s *ReportService) DeleteReport(ctx context.Context, id primitive.ObjectID) error {
 	return s.reports.Delete(ctx, id)
+}
+
+func (s *ReportService) render(ctx context.Context, reportID primitive.ObjectID, params map[string]interface{}) (string, error) {
+	def, err := s.reports.FindByID(ctx, reportID)
+	if err != nil {
+		return "", err
+	}
+	if err := reportquery.ValidateParams(def.ParamSchema, params); err != nil {
+		return "", fmt.Errorf("%w: %v", apperr.ErrInvalidReportParams, err)
+	}
+	pipeline, err := reportquery.BuildPipeline(def.PipelineTemplate, params)
+	if err != nil {
+		return "", fmt.Errorf("report %s has an invalid pipeline: %w", def.ID.Hex(), err)
+	}
+
+	tpl, err := s.templates.FindByID(ctx, def.TemplateID)
+	if err != nil {
+		return "", err
+	}
+
+	runCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	rows, err := s.data.Run(runCtx, def.Collection, pipeline)
+	if err != nil {
+		return "", fmt.Errorf("run report aggregation: %w", err)
+	}
+
+	htmlTpl, err := template.New("report").Parse(tpl.HTMLContent)
+	if err != nil {
+		return "", fmt.Errorf("report %s has an invalid template: %w", def.ID.Hex(), err)
+	}
+
+	var buf bytes.Buffer
+	data := struct {
+		Rows        []bson.M
+		Params      map[string]interface{}
+		GeneratedAt time.Time
+	}{Rows: rows, Params: params, GeneratedAt: time.Now().UTC()}
+	if err := htmlTpl.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("render report template: %w", err)
+	}
+	return buf.String(), nil
+}
+
+func (s *ReportService) PreviewReport(ctx context.Context, reportID primitive.ObjectID, params map[string]interface{}) (string, error) {
+	return s.render(ctx, reportID, params)
+}
+
+func (s *ReportService) GenerateReportPDF(ctx context.Context, reportID primitive.ObjectID, params map[string]interface{}) ([]byte, error) {
+	html, err := s.render(ctx, reportID, params)
+	if err != nil {
+		return nil, err
+	}
+	return s.renderer.RenderHTML(ctx, html)
 }

@@ -152,3 +152,95 @@ func TestReportService_DeleteReport_RemovesIt(t *testing.T) {
 
 	assert.Equal(t, def.ID, reports.deletedID)
 }
+
+type fakeDataRunner struct {
+	rows         []bson.M
+	lastCollName string
+	lastPipeline bson.A
+}
+
+func (f *fakeDataRunner) Run(ctx context.Context, collection string, pipeline bson.A) ([]bson.M, error) {
+	f.lastCollName, f.lastPipeline = collection, pipeline
+	return f.rows, nil
+}
+
+type fakeRenderer struct {
+	lastHTML string
+	pdfBytes []byte
+	err      error
+}
+
+func (f *fakeRenderer) RenderHTML(ctx context.Context, html string) ([]byte, error) {
+	f.lastHTML = html
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.pdfBytes, nil
+}
+
+func newReportServiceWithRenderPath(reports *fakeReportRepo, templates *fakeTemplateLookup, data *fakeDataRunner, renderer *fakeRenderer) *ReportService {
+	return NewReportService(reports, templates, data, renderer)
+}
+
+func setUpOrdersByStatusReport(t *testing.T) (*ReportService, *model.ReportDefinition, *fakeDataRunner, *fakeRenderer) {
+	t.Helper()
+	tmpl := &model.Template{
+		ID:          primitive.NewObjectID(),
+		Name:        "orders-report",
+		HTMLContent: `<html><body><p>{{range .Rows}}{{.status}}: {{.total}}{{end}}</p></body></html>`,
+	}
+	reports := newFakeReportRepo()
+	data := &fakeDataRunner{rows: []bson.M{{"status": "paid", "total": int32(30)}}}
+	renderer := &fakeRenderer{pdfBytes: []byte("%PDF-fake")}
+	svc := newReportServiceWithRenderPath(reports, newFakeTemplateLookup(tmpl), data, renderer)
+	schema := []model.ReportParam{{Name: "status", Type: "string", Required: true}}
+	def, err := svc.CreateReport(context.Background(), "orders-by-status", tmpl.ID, "orders",
+		`[{"$match": {"status": {{json .status}}}}]`, schema)
+	require.NoError(t, err)
+	return svc, def, data, renderer
+}
+
+func TestReportService_PreviewReport_RendersTemplateWithQueryResults(t *testing.T) {
+	svc, def, data, _ := setUpOrdersByStatusReport(t)
+
+	html, err := svc.PreviewReport(context.Background(), def.ID, map[string]interface{}{"status": "paid"})
+
+	require.NoError(t, err)
+	assert.Contains(t, html, "paid: 30")
+	assert.Equal(t, "orders", data.lastCollName)
+}
+
+func TestReportService_PreviewReport_FailsWhenRequiredParamMissing(t *testing.T) {
+	svc, def, _, _ := setUpOrdersByStatusReport(t)
+
+	_, err := svc.PreviewReport(context.Background(), def.ID, map[string]interface{}{})
+
+	require.ErrorIs(t, err, apperr.ErrInvalidReportParams)
+}
+
+func TestReportService_PreviewReport_FailsWhenReportNotFound(t *testing.T) {
+	svc := newTestReportService(newFakeReportRepo(), newFakeTemplateLookup())
+
+	_, err := svc.PreviewReport(context.Background(), primitive.NewObjectID(), map[string]interface{}{})
+
+	require.ErrorIs(t, err, apperr.ErrReportNotFound)
+}
+
+func TestReportService_GenerateReportPDF_RendersHTMLThenPipesThroughRenderer(t *testing.T) {
+	svc, def, _, renderer := setUpOrdersByStatusReport(t)
+
+	pdfBytes, err := svc.GenerateReportPDF(context.Background(), def.ID, map[string]interface{}{"status": "paid"})
+
+	require.NoError(t, err)
+	assert.Equal(t, []byte("%PDF-fake"), pdfBytes)
+	assert.Contains(t, renderer.lastHTML, "paid: 30")
+}
+
+func TestReportService_GenerateReportPDF_PropagatesRendererError(t *testing.T) {
+	svc, def, _, renderer := setUpOrdersByStatusReport(t)
+	renderer.err = assert.AnError
+
+	_, err := svc.GenerateReportPDF(context.Background(), def.ID, map[string]interface{}{"status": "paid"})
+
+	require.Error(t, err)
+}
