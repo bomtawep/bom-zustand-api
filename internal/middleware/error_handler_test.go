@@ -32,7 +32,13 @@ func TestErrorHandler_MapsDomainErrorsToStatusCodes(t *testing.T) {
 		{apperr.ErrUserInactive, http.StatusForbidden},
 		{apperr.ErrPermissionDenied, http.StatusForbidden},
 		{apperr.ErrUserNotFound, http.StatusNotFound},
+		{apperr.ErrTemplateNotFound, http.StatusNotFound},
+		{apperr.ErrReportNotFound, http.StatusNotFound},
 		{apperr.ErrEmailAlreadyExists, http.StatusConflict},
+		{apperr.ErrNameAlreadyExists, http.StatusConflict},
+		{apperr.ErrInvalidReportParams, http.StatusBadRequest},
+		{apperr.ErrTemplateInvalid, http.StatusBadRequest},
+		{apperr.ErrPipelineInvalid, http.StatusBadRequest},
 	}
 
 	for _, tc := range cases {
