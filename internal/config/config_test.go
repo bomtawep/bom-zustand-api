@@ -49,3 +49,22 @@ func TestLoad_InvalidSMTPPortFails(t *testing.T) {
 
 	require.Error(t, err)
 }
+
+func TestLoad_ChromeExecPathDefaultsToEmpty(t *testing.T) {
+	setRequiredEnv(t)
+
+	cfg, err := Load()
+
+	require.NoError(t, err)
+	assert.Equal(t, "", cfg.ChromeExecPath)
+}
+
+func TestLoad_ChromeExecPathReadsFromEnv(t *testing.T) {
+	setRequiredEnv(t)
+	t.Setenv("CHROME_EXEC_PATH", "/usr/bin/chromium")
+
+	cfg, err := Load()
+
+	require.NoError(t, err)
+	assert.Equal(t, "/usr/bin/chromium", cfg.ChromeExecPath)
+}
