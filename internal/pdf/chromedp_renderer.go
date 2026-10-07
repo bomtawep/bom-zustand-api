@@ -42,6 +42,13 @@ func (r *ChromedpRenderer) RenderHTML(ctx context.Context, html string) ([]byte,
 	tabCtx, timeoutCancel := context.WithTimeout(tabCtx, 30*time.Second)
 	defer timeoutCancel()
 
+	// Honor the caller's context: if it's cancelled (e.g. the HTTP request's
+	// context, on client disconnect or a shorter request-scoped deadline),
+	// abort the in-flight render instead of continuing to the full 30s
+	// regardless of what the caller wanted.
+	stop := context.AfterFunc(ctx, timeoutCancel)
+	defer stop()
+
 	dataURI := "data:text/html;base64," + base64.StdEncoding.EncodeToString([]byte(html))
 
 	if err := chromedp.Do(tabCtx, chromedp.Navigate(dataURI)); err != nil {
