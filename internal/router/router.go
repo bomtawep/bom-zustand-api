@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
-func New(jwtSecret string, authHandler *handler.AuthHandler, userHandler *handler.UserHandler) *echo.Echo {
+func New(jwtSecret string, authHandler *handler.AuthHandler, userHandler *handler.UserHandler, templateHandler *handler.TemplateHandler, reportHandler *handler.ReportHandler) *echo.Echo {
 	e := echo.New()
 	e.Validator = httpvalidator.New()
 	e.HTTPErrorHandler = appmiddleware.ErrorHandler
@@ -36,6 +36,22 @@ func New(jwtSecret string, authHandler *handler.AuthHandler, userHandler *handle
 	usersGroup.GET("/:id", userHandler.Get, appmiddleware.RequirePermission(auth.PermUserRead))
 	usersGroup.PATCH("/:id", userHandler.Update, appmiddleware.RequirePermission(auth.PermUserUpdate))
 	usersGroup.DELETE("/:id", userHandler.Delete, appmiddleware.RequirePermission(auth.PermUserDelete))
+
+	templatesGroup := e.Group("/api/v1/templates", jwtAuth)
+	templatesGroup.POST("", templateHandler.Create, appmiddleware.RequirePermission(auth.PermTemplateCreate))
+	templatesGroup.GET("", templateHandler.List, appmiddleware.RequirePermission(auth.PermTemplateRead))
+	templatesGroup.GET("/:id", templateHandler.Get, appmiddleware.RequirePermission(auth.PermTemplateRead))
+	templatesGroup.PATCH("/:id", templateHandler.Update, appmiddleware.RequirePermission(auth.PermTemplateUpdate))
+	templatesGroup.DELETE("/:id", templateHandler.Delete, appmiddleware.RequirePermission(auth.PermTemplateDelete))
+
+	reportsGroup := e.Group("/api/v1/reports", jwtAuth)
+	reportsGroup.POST("", reportHandler.Create, appmiddleware.RequirePermission(auth.PermReportCreate))
+	reportsGroup.GET("", reportHandler.List, appmiddleware.RequirePermission(auth.PermReportRead))
+	reportsGroup.GET("/:id", reportHandler.Get, appmiddleware.RequirePermission(auth.PermReportRead))
+	reportsGroup.PATCH("/:id", reportHandler.Update, appmiddleware.RequirePermission(auth.PermReportUpdate))
+	reportsGroup.DELETE("/:id", reportHandler.Delete, appmiddleware.RequirePermission(auth.PermReportDelete))
+	reportsGroup.POST("/:id/preview", reportHandler.Preview, appmiddleware.RequirePermission(auth.PermReportGenerate))
+	reportsGroup.POST("/:id/generate", reportHandler.Generate, appmiddleware.RequirePermission(auth.PermReportGenerate))
 
 	return e
 }
