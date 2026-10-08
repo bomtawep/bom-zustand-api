@@ -49,3 +49,45 @@ func (s *stubUserServicer) UpdateUser(ctx context.Context, id primitive.ObjectID
 func (s *stubUserServicer) DeactivateUser(ctx context.Context, id primitive.ObjectID) error {
 	return nil
 }
+
+type stubTemplateServicer struct{}
+
+func (s *stubTemplateServicer) CreateTemplate(ctx context.Context, name, description, htmlContent string) (*model.Template, error) {
+	return &model.Template{}, nil
+}
+func (s *stubTemplateServicer) ListTemplates(ctx context.Context, limit, skip int64) ([]*model.Template, error) {
+	return nil, nil
+}
+func (s *stubTemplateServicer) GetTemplate(ctx context.Context, id primitive.ObjectID) (*model.Template, error) {
+	return &model.Template{}, nil
+}
+func (s *stubTemplateServicer) UpdateTemplate(ctx context.Context, id primitive.ObjectID, name, description, htmlContent *string) (*model.Template, error) {
+	return &model.Template{}, nil
+}
+func (s *stubTemplateServicer) DeleteTemplate(ctx context.Context, id primitive.ObjectID) error {
+	return nil
+}
+
+type stubReportServicer struct{}
+
+func (s *stubReportServicer) CreateReport(ctx context.Context, name string, templateID primitive.ObjectID, collection, pipelineTemplate string, paramSchema []model.ReportParam) (*model.ReportDefinition, error) {
+	return &model.ReportDefinition{}, nil
+}
+func (s *stubReportServicer) ListReports(ctx context.Context, limit, skip int64) ([]*model.ReportDefinition, error) {
+	return nil, nil
+}
+func (s *stubReportServicer) GetReport(ctx context.Context, id primitive.ObjectID) (*model.ReportDefinition, error) {
+	return &model.ReportDefinition{}, nil
+}
+func (s *stubReportServicer) UpdateReport(ctx context.Context, id primitive.ObjectID, name, collection, pipelineTemplate *string, paramSchema []model.ReportParam) (*model.ReportDefinition, error) {
+	return &model.ReportDefinition{}, nil
+}
+func (s *stubReportServicer) DeleteReport(ctx context.Context, id primitive.ObjectID) error {
+	return nil
+}
+func (s *stubReportServicer) PreviewReport(ctx context.Context, id primitive.ObjectID, params map[string]interface{}) (string, error) {
+	return "<html></html>", nil
+}
+func (s *stubReportServicer) GenerateReportPDF(ctx context.Context, id primitive.ObjectID, params map[string]interface{}) ([]byte, error) {
+	return []byte("%PDF-fake"), nil
+}

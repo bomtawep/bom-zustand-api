@@ -25,6 +25,7 @@ type Config struct {
 	AppBaseURL        string
 	SeedAdminEmail    string
 	SeedAdminPassword string
+	ChromeExecPath    string
 }
 
 func Load() (*Config, error) {
@@ -44,6 +45,7 @@ func Load() (*Config, error) {
 		AppBaseURL:        os.Getenv("APP_BASE_URL"),
 		SeedAdminEmail:    os.Getenv("SEED_ADMIN_EMAIL"),
 		SeedAdminPassword: os.Getenv("SEED_ADMIN_PASSWORD"),
+		ChromeExecPath:    os.Getenv("CHROME_EXEC_PATH"),
 	}
 
 	for name, val := range map[string]string{

@@ -11,6 +11,7 @@ import (
 	"bom-zustand-api/internal/db"
 	"bom-zustand-api/internal/handler"
 	"bom-zustand-api/internal/mailer"
+	"bom-zustand-api/internal/pdf"
 	"bom-zustand-api/internal/repository"
 	"bom-zustand-api/internal/router"
 	"bom-zustand-api/internal/service"
@@ -47,6 +48,9 @@ func main() {
 	userRepo := repository.NewUserRepository(database)
 	refreshTokenRepo := repository.NewRefreshTokenRepository(database)
 	resetTokenRepo := repository.NewPasswordResetTokenRepository(database)
+	templateRepo := repository.NewTemplateRepository(database)
+	reportRepo := repository.NewReportDefinitionRepository(database)
+	aggregationRepo := repository.NewAggregationRepository(database)
 
 	if err := bootstrap.SeedAdmin(ctx, userRepo, cfg.SeedAdminEmail, cfg.SeedAdminPassword); err != nil {
 		log.Fatalf("seed admin: %v", err)
@@ -60,17 +64,23 @@ func main() {
 	}
 
 	mailerClient := mailer.NewSMTPMailer(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
+	pdfRenderer := pdf.NewChromedpRenderer(cfg.ChromeExecPath)
+	defer pdfRenderer.Close()
 
 	authService := service.NewAuthService(
 		userRepo, refreshTokenRepo, resetTokenRepo, mailerClient,
 		cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL, cfg.ResetTokenTTL, cfg.AppBaseURL,
 	)
 	userService := service.NewUserService(userRepo, resetTokenRepo, mailerClient, cfg.ResetTokenTTL, cfg.AppBaseURL)
+	templateService := service.NewTemplateService(templateRepo)
+	reportService := service.NewReportService(reportRepo, templateRepo, aggregationRepo, pdfRenderer)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
+	templateHandler := handler.NewTemplateHandler(templateService)
+	reportHandler := handler.NewReportHandler(reportService)
 
-	e := router.New(cfg.JWTSecret, authHandler, userHandler)
+	e := router.New(cfg.JWTSecret, authHandler, userHandler, templateHandler, reportHandler)
 
 	// Echo v5's Start blocks the whole request/response/graceful-shutdown
 	// lifecycle internally: it installs its own SIGINT/SIGTERM handler and

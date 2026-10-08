@@ -21,10 +21,17 @@ func ErrorHandler(c *echo.Context, err error) {
 	case errors.Is(err, apperr.ErrUserInactive),
 		errors.Is(err, apperr.ErrPermissionDenied):
 		status, message = http.StatusForbidden, err.Error()
-	case errors.Is(err, apperr.ErrUserNotFound):
+	case errors.Is(err, apperr.ErrUserNotFound),
+		errors.Is(err, apperr.ErrTemplateNotFound),
+		errors.Is(err, apperr.ErrReportNotFound):
 		status, message = http.StatusNotFound, err.Error()
-	case errors.Is(err, apperr.ErrEmailAlreadyExists):
+	case errors.Is(err, apperr.ErrEmailAlreadyExists),
+		errors.Is(err, apperr.ErrNameAlreadyExists):
 		status, message = http.StatusConflict, err.Error()
+	case errors.Is(err, apperr.ErrInvalidReportParams),
+		errors.Is(err, apperr.ErrTemplateInvalid),
+		errors.Is(err, apperr.ErrPipelineInvalid):
+		status, message = http.StatusBadRequest, err.Error()
 	default:
 		var he *echo.HTTPError
 		if errors.As(err, &he) {

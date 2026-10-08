@@ -34,14 +34,53 @@ func TestHasPermission_UnknownRoleHasNoPermissions(t *testing.T) {
 
 func TestPermissionsForRole_ReturnsExpectedPermissionsPerRole(t *testing.T) {
 	assert.ElementsMatch(t,
-		[]Permission{PermUserCreate, PermUserRead, PermUserUpdate, PermUserDelete},
+		[]Permission{
+			PermUserCreate, PermUserRead, PermUserUpdate, PermUserDelete,
+			PermTemplateCreate, PermTemplateRead, PermTemplateUpdate, PermTemplateDelete,
+			PermReportCreate, PermReportRead, PermReportUpdate, PermReportDelete, PermReportGenerate,
+		},
 		PermissionsForRole(RoleAdmin),
 	)
-	assert.ElementsMatch(t, []Permission{PermUserRead}, PermissionsForRole(RoleManager))
-	assert.Empty(t, PermissionsForRole(RoleStaff))
+	assert.ElementsMatch(t, []Permission{PermUserRead, PermTemplateRead, PermReportRead, PermReportGenerate}, PermissionsForRole(RoleManager))
+	assert.ElementsMatch(t, []Permission{PermReportRead, PermReportGenerate}, PermissionsForRole(RoleStaff))
 	assert.Empty(t, PermissionsForRole(RoleViewer))
 }
 
 func TestPermissionsForRole_UnknownRoleReturnsEmpty(t *testing.T) {
 	assert.Empty(t, PermissionsForRole(Role("nonexistent")))
+}
+
+func TestHasPermission_AdminHasAllTemplateAndReportPermissions(t *testing.T) {
+	perms := []Permission{
+		PermTemplateCreate, PermTemplateRead, PermTemplateUpdate, PermTemplateDelete,
+		PermReportCreate, PermReportRead, PermReportUpdate, PermReportDelete, PermReportGenerate,
+	}
+	for _, p := range perms {
+		assert.True(t, HasPermission(RoleAdmin, p), "admin should have %s", p)
+	}
+}
+
+func TestHasPermission_ManagerCanReadAndGenerateButNotAuthor(t *testing.T) {
+	assert.True(t, HasPermission(RoleManager, PermTemplateRead))
+	assert.True(t, HasPermission(RoleManager, PermReportRead))
+	assert.True(t, HasPermission(RoleManager, PermReportGenerate))
+	assert.False(t, HasPermission(RoleManager, PermTemplateCreate))
+	assert.False(t, HasPermission(RoleManager, PermReportCreate))
+}
+
+func TestHasPermission_StaffCanReadAndGenerateReportsOnly(t *testing.T) {
+	assert.True(t, HasPermission(RoleStaff, PermReportRead))
+	assert.True(t, HasPermission(RoleStaff, PermReportGenerate))
+	assert.False(t, HasPermission(RoleStaff, PermTemplateRead))
+	assert.False(t, HasPermission(RoleStaff, PermReportCreate))
+}
+
+func TestHasPermission_ViewerHasNoTemplateOrReportPermissions(t *testing.T) {
+	perms := []Permission{
+		PermTemplateCreate, PermTemplateRead, PermTemplateUpdate, PermTemplateDelete,
+		PermReportCreate, PermReportRead, PermReportUpdate, PermReportDelete, PermReportGenerate,
+	}
+	for _, p := range perms {
+		assert.False(t, HasPermission(RoleViewer, p), "viewer should not have %s", p)
+	}
 }
