@@ -41,7 +41,7 @@ type createReportRequest struct {
 // Create godoc
 //
 //	@Summary		Create a report definition
-//	@Description	Pairs a template with a MongoDB aggregation pipeline and a param schema. Requires the report:create permission. Pipeline placeholders use {{json .paramName}}; wrap date params needing BSON Date comparison as {"$date": {{json .paramName}}}.
+//	@Description	Pairs a template with a MongoDB aggregation pipeline and a param schema. Requires the report:create permission. Pipeline placeholders use Go template syntax, double-brace json dot paramName; wrap date params needing BSON Date comparison using the Extended JSON dollar-date form.
 //	@Tags			reports
 //	@Accept			json
 //	@Produce		json
